@@ -85,7 +85,7 @@ namespace PoeTexasCorTap
 
             var request = new HttpClientRequest { RequestType = RequestType.Put, ContentString = JsonConvert.SerializeObject(body) };
             request.Header.SetHeaderValue("Content-Type", "application/json");
-            request.Url.Parse(url + "/v2/fixtures");
+            request.Url.Parse("http://" + url + "/v2/fixtures");
             return request;
         }
 
