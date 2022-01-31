@@ -21,10 +21,12 @@ namespace PoeTexasCorTap
         {
             const int pollTime = 30000;
             _pollTimer.Reset(pollTime);
+            StartErrorTimers();
         }
 
         public override void Stop()
         {
+            StopErrorTimers();
             _pollTimer.Stop();
         }
 
