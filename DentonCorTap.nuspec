@@ -14,7 +14,7 @@
     <projectUrl>https://github.com/PepperDash/epi-lighting-denton-cor-tap</projectUrl>
     <copyright>Copyright 2022</copyright>
     <!-- Update description-->
-    <description>Sony Bravia</description>
+    <description>Denton COR-TAP Lighting Gateway</description>
     <tags>crestron 3series 4series</tags>
     <!-- Update repository url with the actual URL of the plugin repo-->
     <repository type="git" url=" https://github.com/PepperDash/epi-lighting-denton-cor-tap"/>

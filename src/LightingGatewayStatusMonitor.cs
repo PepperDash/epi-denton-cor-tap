@@ -10,6 +10,7 @@ namespace PoeTexasCorTap
     {
         private readonly string _url;
         private readonly CTimer _pollTimer;
+        private readonly HttpClient _client = new HttpClient();
 
         public LightingGatewayStatusMonitor(IKeyed parent, string url, long warningTime, long errorTime) : base(parent, warningTime, errorTime)
         {
@@ -20,11 +21,13 @@ namespace PoeTexasCorTap
         public override void Start()
         {
             const int pollTime = 30000;
-            _pollTimer.Reset(pollTime);
+            _pollTimer.Reset(0, pollTime);
+            StartErrorTimers();
         }
 
         public override void Stop()
         {
+            StopErrorTimers();
             _pollTimer.Stop();
         }
 
@@ -33,12 +36,28 @@ namespace PoeTexasCorTap
             try
             {
                 var request = GetPollRequest(_url);
-                using (var client = new HttpClient())
-                using (var response = client.Dispatch(request))
-                {
-                    Debug.Console(1, "Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
-                    ResetErrorTimers();
-                };
+                _client.DispatchAsync(
+                    request, (o, error) =>
+                    {
+                        switch (error)
+                        {
+                            case HTTP_CALLBACK_ERROR.COMPLETED:
+                                ResetErrorTimers();
+                                break;
+                            case HTTP_CALLBACK_ERROR.INVALID_PARAM:
+                                Debug.Console(
+                                    1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
+                                    HTTP_CALLBACK_ERROR.INVALID_PARAM.ToString());
+                                break;
+                            case HTTP_CALLBACK_ERROR.UNKNOWN_ERROR:
+                                Debug.Console(
+                                    1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
+                                    HTTP_CALLBACK_ERROR.UNKNOWN_ERROR.ToString());
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException("error");
+                        }
+                    });
             }
             catch (Exception ex)
             {
@@ -50,7 +69,7 @@ namespace PoeTexasCorTap
         {
             var request = new HttpClientRequest { RequestType = RequestType.Get };
             request.Header.SetHeaderValue("Content-Type", "application/json");
-            request.Url.Parse(url + "/v2/config/version");
+            request.Url.Parse("http://" + url + "/v2/config/version");
             return request;
         }
     }

@@ -12,7 +12,7 @@ using PepperDash.Essentials.Core.Lighting;
 
 namespace PoeTexasCorTap
 {
-    public class LightingGatewayDevice: LightingBase, ICommunicationMonitor
+    public class LightingGatewayDevice: LightingBase, ICommunicationMonitor, IOnline
     {
         private readonly string _url;
         private int _requestedLevel;
@@ -27,7 +27,7 @@ namespace PoeTexasCorTap
             {
                 try
                 {
-                    var request = GetRequestForLevel(_url, props.Fixture, _requestedLevel);
+                    var request = GetRequestForLevel(_url, props.FixtureName, _requestedLevel);
                     using (var client = new HttpClient())
                     using (var response = client.Dispatch(request))
                     {
@@ -85,10 +85,11 @@ namespace PoeTexasCorTap
 
             var request = new HttpClientRequest { RequestType = RequestType.Put, ContentString = JsonConvert.SerializeObject(body) };
             request.Header.SetHeaderValue("Content-Type", "application/json");
-            request.Url.Parse(url + "/v2/fixtures");
+            request.Url.Parse("http://" + url + "/v2/fixtures");
             return request;
         }
 
         public StatusMonitorBase CommunicationMonitor { get; private set; }
+        public BoolFeedback IsOnline { get { return CommunicationMonitor.IsOnlineFeedback; } }
     }
 }

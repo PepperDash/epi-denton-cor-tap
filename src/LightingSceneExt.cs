@@ -10,7 +10,7 @@ namespace PoeTexasCorTap
         {
             var request = new HttpClientRequest { RequestType = RequestType.Put, ContentString = scene.GetBodyForSceneRecall()};
             request.Header.SetHeaderValue("Content-Type", "application/json");
-            request.Url.Parse(url + "/v2/scenes");
+            request.Url.Parse("http://" + url + "/v2/scenes");
             return request;
         }
 

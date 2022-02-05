@@ -89,6 +89,7 @@
   <ItemGroup>
     <Compile Include="LightingGatewayConfig.cs" />
     <Compile Include="LightingGatewayDevice.cs" />
+    <Compile Include="LightingGatewayFactory.cs" />
     <Compile Include="LightingGatewayJoinMap.cs" />
     <Compile Include="LightingGatewayStatusMonitor.cs" />
     <Compile Include="LightingSceneExt.cs" />
