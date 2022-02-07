@@ -9,7 +9,7 @@ namespace PoeTexasCorTap
                 new JoinData {JoinNumber = 2, JoinSpan = 1},
                 new JoinMetadata
                 {
-                    Description = "Lighting Controller Ramp Fixture By Index",
+                    Description = "Lighting Controller Ramp Fixture",
                     JoinCapabilities = eJoinCapabilities.FromSIMPL,
                     JoinType = eJoinType.Analog
                 });

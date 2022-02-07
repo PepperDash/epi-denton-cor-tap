@@ -17,7 +17,7 @@
     <description>Denton COR-TAP Lighting Gateway</description>
     <tags>crestron 3series 4series</tags>
     <!-- Update repository url with the actual URL of the plugin repo-->
-    <repository type="git" url=" https://github.com/PepperDash/epi-lighting-denton-cor-tap"/>
+    <repository type="git" url="https://github.com/PepperDash/epi-lighting-denton-cor-tap"/>
   </metadata>
     <files>
       <file src="**" target="lib\net35"/>

@@ -50,7 +50,7 @@ namespace PoeTexasCorTap
             LinkLightingToApi(this, trilist, joinStart, joinMapKey, bridge);
             var joinMap = new LightingGatewayJoinMap(joinStart);
             if (bridge != null)
-                bridge.AddJoinMap(Key, joinMap);
+                bridge.AddJoinMap(Key + "-custom", joinMap);
 
             trilist.SetUShortSigAction(joinMap.RampFixture.JoinNumber, SetLoadLevel);
         }
