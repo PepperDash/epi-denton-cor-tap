@@ -46,12 +46,12 @@ namespace PoeTexasCorTap
                                 break;
                             case HTTP_CALLBACK_ERROR.INVALID_PARAM:
                                 Debug.Console(
-                                    1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
+                                    1, this, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
                                     HTTP_CALLBACK_ERROR.INVALID_PARAM.ToString());
                                 break;
                             case HTTP_CALLBACK_ERROR.UNKNOWN_ERROR:
                                 Debug.Console(
-                                    1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
+                                    1, this, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
                                     HTTP_CALLBACK_ERROR.UNKNOWN_ERROR.ToString());
                                 break;
                             default:
@@ -61,7 +61,7 @@ namespace PoeTexasCorTap
             }
             catch (Exception ex)
             {
-                Debug.Console(1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                Debug.Console(1, this, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
             }
         }
 

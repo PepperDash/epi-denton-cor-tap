@@ -26,7 +26,7 @@ namespace PoeTexasCorTap
             _config = props;
             _url = props.Url;
             LightingScenes = props.Scenes.ToList();
-            Debug.Console(2, this, "LightingGatewayDevice: LightingScenes ToList {0}", LightingScenes.Count);
+            Debug.Console(2, this, "LightingGatewayDevice: LightingScenes ToList() Count: {0}", LightingScenes.Count);
             _levelDispatchTimer = new CTimer(o =>
             {
                 try
@@ -35,12 +35,12 @@ namespace PoeTexasCorTap
                     using (var client = new HttpClient())
                     using (var response = client.Dispatch(request))
                     {
-                        Debug.Console(1, "Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
+                        Debug.Console(1, this, "Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
                     };
                 }
                 catch (Exception ex)
                 {
-                    Debug.Console(1, Debug.ErrorLogLevel.Notice, "LightingGatewayDevice: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                    Debug.Console(1, this, Debug.ErrorLogLevel.Notice, "LightingGatewayDevice: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
                 }
             }, Timeout.Infinite);
 
@@ -69,12 +69,12 @@ namespace PoeTexasCorTap
                 using (var client = new HttpClient())
                 using (var response = client.Dispatch(request))
                 {
-                    Debug.Console(1, "SelectScene: Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
+                    Debug.Console(1, this, "SelectScene: Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
                 }; 
             }
             catch (Exception ex)
             {
-                Debug.Console(1, Debug.ErrorLogLevel.Notice, "SelectScene: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                Debug.Console(1, this, Debug.ErrorLogLevel.Notice, "SelectScene: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
             }
         }
 
