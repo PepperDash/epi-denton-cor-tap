@@ -10,6 +10,7 @@ using PepperDash.Essentials.Core.Bridges;
 using PepperDash.Essentials.Core.Config;
 using PepperDash.Essentials.Core.Lighting;
 
+
 namespace PoeTexasCorTap
 {
     public class LightingGatewayDevice: LightingBase, ICommunicationMonitor, IOnline
@@ -17,12 +18,15 @@ namespace PoeTexasCorTap
         private readonly string _url;
         private int _requestedLevel;
         private readonly CTimer _levelDispatchTimer;
+        private readonly  LightingGatewayConfig _config;
 
         public LightingGatewayDevice(DeviceConfig config) : base(config.Key, config.Name)
         {
             var props = config.Properties.ToObject<LightingGatewayConfig>();
+            _config = props;
             _url = props.Url;
             LightingScenes = props.Scenes.ToList();
+            Debug.Console(2, this, "LightingGatewayDevice: LightingScenes ToList {0}", LightingScenes.Count);
             _levelDispatchTimer = new CTimer(o =>
             {
                 try
@@ -36,7 +40,7 @@ namespace PoeTexasCorTap
                 }
                 catch (Exception ex)
                 {
-                    Debug.Console(1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                    Debug.Console(1, Debug.ErrorLogLevel.Notice, "LightingGatewayDevice: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
                 }
             }, Timeout.Infinite);
 
@@ -51,24 +55,26 @@ namespace PoeTexasCorTap
             var joinMap = new LightingGatewayJoinMap(joinStart);
             if (bridge != null)
                 bridge.AddJoinMap(Key + "-custom", joinMap);
-
+            
             trilist.SetUShortSigAction(joinMap.RampFixture.JoinNumber, SetLoadLevel);
+            trilist.SetString(joinMap.FixtureName.JoinNumber, _config.FixtureName);
         }
 
         public override void SelectScene(LightingScene scene)
         {
             try
             {
+                Debug.Console(2, this, "SelectScene: Scene called with ID: {0} and Name: {1}", scene.ID, scene.Name);
                 var request = scene.GetRequestForScene(_url);
                 using (var client = new HttpClient())
                 using (var response = client.Dispatch(request))
                 {
-                    Debug.Console(1, "Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
+                    Debug.Console(1, "SelectScene: Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
                 }; 
             }
             catch (Exception ex)
             {
-                Debug.Console(1, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                Debug.Console(1, Debug.ErrorLogLevel.Notice, "SelectScene: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
             }
         }
 
