@@ -1,16 +1,11 @@
-# PepperDash Essentials DENTON-COR-TAP Plugin (c) 2022
-
+![PepperDash Logo](/images/logo_pdt_no_tagline_600.png)
 ## License
-
 Provided under MIT license
-
-## Overview
+# PepperDash Essentials DENTON-COR-TAP Plugin (c) 2022
 
 This repo contains a plugin for use with [PepperDash Essentials](https://github.com/PepperDash/Essentials). This plugin enables Essentials to communicate with and control the DENTON-COR-TAP via HTTP.
 
-## Example Config Object
-
-example config
+### Essentials Device Configuration
 ```json
 {
   "key": "lights-1",
@@ -28,7 +23,66 @@ example config
   }         
 },
 ```
-For more configuration information, see the [PepperDash Essentials wiki](https://github.com/PepperDash/Essentials/wiki).
+## Device Bridging
+
+### Essentials Device Bridge Configuration
+
+```json
+ {
+        "key": "lighting-bridge-1",
+        "uid": 2,
+        "name": "Lighting Bridge 1",
+        "group": "api",
+        "type": "eiscApiAdvanced",
+        "properties": {
+          "control": {
+            "tcpSshProperties": {
+              "address": "127.0.0.2",
+              "port": 0
+            },
+            "ipid": "ac",
+            "method": "ipidTcp"
+          },
+          "devices": [
+            {
+              "deviceKey": "lights-1",
+              "joinStart": 1
+            }
+          ]
+        }
+      }
+```
+### Essentials Bridge Join Map
+
+The join map below documents the commands implemented in this plugin.
+
+### Digitals
+
+| Input                         | I/O | Output                    |
+| ----------------------------- | --- | ------------------------- |
+|                               | 1   | Device Online Fb          |
+|                               | +   |                           |
+| Recall Scene 1                | 11  |                           |
+| Recall Scene 2                | 12  |                           |
+| Recall Scene 3                | 13  |                           |
+| Recall Scene 4                | 14  |                           |
+| Recall Scene 5                | 15  |                           |
+| Recall Scene 6                | 16  |                           |
+
+### Analogs
+
+| Input                         | I/O | Output                    |
+| ----------------------------- | --- | ------------------------- |
+| Fixture Level Set             | 1   | Fixture Level Feedback    |
+
+### Serials
+
+| Input | I/O | Output                      |
+| ----- | --- | --------------------------- |
+|       | 1   | Device Name                 |
+|       | 2   | Fixture Name                |
+|       | +   |                             |
+|       | 11  | Scene Name (1-10)           |
 
 ## Github Actions
 
@@ -42,4 +96,3 @@ This repo contains two Github Action workflows that will build this project auto
 Builds on the `Main` branch will ONLY be triggered by manually creating a release using the web interface in the repository. They will be versioned with the tag that is created when the release is created. The tags MUST take the form `major.minor.revision` to be compatible with the build process. A tag like `v0.1.0-alpha` is NOT compatabile and may result in the build process failing.
 
 If you have any questions about the action, contact Andrew Welker or Neil Dorin.
-
