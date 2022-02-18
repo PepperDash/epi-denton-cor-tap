@@ -68,6 +68,10 @@ The join map below documents the commands implemented in this plugin.
 | Recall Scene 4                | 14  |                           |
 | Recall Scene 5                | 15  |                           |
 | Recall Scene 6                | 16  |                           |
+| Recall Scene 7                | 17  |                           |
+| Recall Scene 8                | 18  |                           |
+| Recall Scene 9                | 19  |                           |
+| Recall Scene 10               | 20  |                           |
 
 ### Analogs
 
@@ -79,10 +83,20 @@ The join map below documents the commands implemented in this plugin.
 
 | Input | I/O | Output                      |
 | ----- | --- | --------------------------- |
-|       | 1   | Device Name                 |
+|       | 1   |                             |
 |       | 2   | Fixture Name                |
 |       | +   |                             |
-|       | 11  | Scene Name (1-10)           |
+|       | 11  | Scene 1 Name                |
+|       | 12  | Scene 2 Name                |
+|       | 13  | Scene 3 Name                |
+|       | 14  | Scene 4 Name                |
+|       | 15  | Scene 5 Name                |
+|       | 16  | Scene 6 Name                |
+|       | 17  | Scene 7 Name                |
+|       | 18  | Scene 8 Name                |
+|       | 19  | Scene 9 Name                |
+|       | 20  | Scene 10 Name               |
+
 
 ## Github Actions
 
