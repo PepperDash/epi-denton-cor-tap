@@ -16,9 +16,10 @@ namespace PoeTexasCorTap
     public class LightingGatewayDevice: LightingBase, ICommunicationMonitor, IOnline
     {
         private readonly string _url;
-        private int _requestedLevel;
         private readonly CTimer _levelDispatchTimer;
-        private readonly  LightingGatewayConfig _config;
+        private readonly LightingGatewayConfig _config;
+
+        private int _requestedLevel;
 
         public LightingGatewayDevice(DeviceConfig config) : base(config.Key, config.Name)
         {
@@ -26,7 +27,8 @@ namespace PoeTexasCorTap
             _config = props;
             _url = props.Url;
             LightingScenes = props.Scenes.ToList();
-            Debug.Console(2, this, "LightingGatewayDevice: LightingScenes ToList() Count: {0}", LightingScenes.Count);
+            Debug.Console(VerboseLevel, this, "LightingGatewayDevice: LightingScenes ToList() Count: {0}", LightingScenes.Count);
+
             _levelDispatchTimer = new CTimer(o =>
             {
                 try
@@ -35,18 +37,19 @@ namespace PoeTexasCorTap
                     using (var client = new HttpClient())
                     using (var response = client.Dispatch(request))
                     {
-                        Debug.Console(1, this, "Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
+                        Debug.Console(DebugLevel, this, "Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
                     };
                 }
                 catch (Exception ex)
                 {
-                    Debug.Console(1, this, Debug.ErrorLogLevel.Notice, "LightingGatewayDevice: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                    Debug.Console(DebugLevel, this, Debug.ErrorLogLevel.Notice, "LightingGatewayDevice: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
                 }
             }, Timeout.Infinite);
 
             CommunicationMonitor = new LightingGatewayStatusMonitor(this, _url, 60000, 120000);
 
             DeviceManager.AllDevicesActivated += (sender, args) => CrestronInvoke.BeginInvoke(o => CommunicationMonitor.Start());
+            ResetDebugLevels();
         }
 
         public override void LinkToApi(BasicTriList trilist, uint joinStart, string joinMapKey, EiscApiAdvanced bridge)
@@ -64,17 +67,17 @@ namespace PoeTexasCorTap
         {
             try
             {
-                Debug.Console(2, this, "SelectScene: Scene called with ID: {0} and Name: {1}", scene.ID, scene.Name);
+                Debug.Console(VerboseLevel, this, "SelectScene: Scene called with ID: {0} and Name: {1}", scene.ID, scene.Name);
                 var request = scene.GetRequestForScene(_url);
                 using (var client = new HttpClient())
                 using (var response = client.Dispatch(request))
                 {
-                    Debug.Console(1, this, "SelectScene: Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
+                    Debug.Console(DebugLevel, this, "SelectScene: Dispatched a lighting command: {0} | Response: {1}", request.ContentString, response.Code);
                 }; 
             }
             catch (Exception ex)
             {
-                Debug.Console(1, this, Debug.ErrorLogLevel.Notice, "SelectScene: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                Debug.Console(DebugLevel, this, Debug.ErrorLogLevel.Notice, "SelectScene: Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
             }
         }
 
@@ -97,5 +100,60 @@ namespace PoeTexasCorTap
 
         public StatusMonitorBase CommunicationMonitor { get; private set; }
         public BoolFeedback IsOnline { get { return CommunicationMonitor.IsOnlineFeedback; } }
+
+        /// <summary>
+        /// Trace level (0)
+        /// </summary>
+        public uint TraceLevel { get; set; }
+
+        /// <summary>
+        /// Debug level (1)
+        /// </summary>
+        public uint DebugLevel { get; set; }
+
+        /// <summary>
+        /// Verbose Level (2)
+        /// </summary>        
+        public uint VerboseLevel { get; set; }
+
+        private CTimer _debugTimer;
+
+        /// <summary>
+        /// Resets debug levels for this device instancee
+        /// </summary>
+        /// <example>
+        /// devjson:1 {"deviceKey":"{deviceKey}", "methodName":"ResetDebugLevels", "params":[]}
+        /// </example>
+        public void ResetDebugLevels()
+        {
+            TraceLevel = 0;
+            DebugLevel = 1;
+            VerboseLevel = 2;
+
+            if (_debugTimer == null)
+                return;
+
+            _debugTimer.Stop();
+        }
+
+        /// <summary>
+        /// Sets the debug levels for this device instance
+        /// </summary>
+        /// <example>
+        /// devjson:1 {"deviceKey":"{deviceKey}", "methodName":"SetDebugLevels", "params":[{level, 0-2}]}
+        /// </example>
+        /// <param name="level"></param>
+        public void SetDebugLevels(uint level)
+        {
+            TraceLevel = level;
+            DebugLevel = level;
+            VerboseLevel = level;
+
+            if (_debugTimer == null)
+                _debugTimer = new CTimer(_ => ResetDebugLevels(), 900000); // 900,000 = 15-mins
+            else
+                _debugTimer.Reset();
+        }
+
     }
 }
