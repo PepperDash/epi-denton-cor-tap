@@ -1,8 +1,10 @@
 ﻿using System;
 using Crestron.SimplSharp;
 using Crestron.SimplSharp.Net.Http;
+using Crestron.SimplSharp.Net.Https;
 using PepperDash.Core;
 using PepperDash.Essentials.Core;
+using RequestType = Crestron.SimplSharp.Net.Http.RequestType;
 
 namespace PoeTexasCorTap
 {
@@ -20,8 +22,8 @@ namespace PoeTexasCorTap
 
         public override void Start()
         {
-            const int pollTime = 30000;
-            _pollTimer.Reset(0, pollTime);
+            const int pollTime = 15000;
+            _pollTimer.Reset(481, pollTime);
             StartErrorTimers();
         }
 
@@ -36,39 +38,22 @@ namespace PoeTexasCorTap
             try
             {
                 var request = GetPollRequest(_url);
-                _client.DispatchAsync(
-                    request, (o, error) =>
-                    {
-                        switch (error)
-                        {
-                            case HTTP_CALLBACK_ERROR.COMPLETED:
-                                ResetErrorTimers();
-                                break;
-                            case HTTP_CALLBACK_ERROR.INVALID_PARAM:
-                                Debug.Console(
-                                    1, this, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
-                                    HTTP_CALLBACK_ERROR.INVALID_PARAM.ToString());
-                                break;
-                            case HTTP_CALLBACK_ERROR.UNKNOWN_ERROR:
-                                Debug.Console(
-                                    1, this, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}",
-                                    HTTP_CALLBACK_ERROR.UNKNOWN_ERROR.ToString());
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException("error");
-                        }
-                    });
+                _client.Dispatch(request);
+                ResetErrorTimers();
+            }
+            catch (HttpsException ex)
+            {
+                Debug.Console(1, "Caught an Https Exception dispatching a lighting poll: {0}{1}", ex.Message, ex.StackTrace);
             }
             catch (Exception ex)
             {
-                Debug.Console(1, this, Debug.ErrorLogLevel.Notice, "Caught an error dispatching a lighting command: {0}{1}", ex.Message, ex.StackTrace);
+                Debug.Console(1, "Caught an Exception dispatching a lighting poll: {0}{1}", ex.Message, ex.StackTrace);
             }
         }
 
         public static HttpClientRequest GetPollRequest(string url)
         {
             var request = new HttpClientRequest { RequestType = RequestType.Get };
-            request.Header.SetHeaderValue("Content-Type", "application/json");
             request.Url.Parse("http://" + url + "/v2/config/version");
             return request;
         }
