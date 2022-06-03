@@ -26,6 +26,7 @@ namespace PoeTexasCorTap
             new Dictionary<string, CTimer>(StringComparer.OrdinalIgnoreCase);
 
         private int _requestedLevel;
+        private readonly HttpClient _client = new HttpClient();
 
         public LightingGatewayDevice(DeviceConfig config) : base(config.Key, config.Name)
         {
@@ -40,12 +41,13 @@ namespace PoeTexasCorTap
                 {
                     try
                     {
-                        DispatchLevelRequest(Url, FixtureName, _requestedLevel);
+                        DispatchLevelRequest(_client, Url, FixtureName, _requestedLevel);
                     }
                     catch (HttpsException ex)
                     {
                         Debug.Console(
                             1,
+                            this,
                             "Caught an Https Exception dispatching a lighting command: {0}{1}",
                             ex.Message,
                             ex.StackTrace);
@@ -54,6 +56,7 @@ namespace PoeTexasCorTap
                     {
                         Debug.Console(
                             1,
+                            this,
                             "Caught an error dispatching a lighting command: {0}{1}",
                             ex.Message,
                             ex.StackTrace);
@@ -61,7 +64,7 @@ namespace PoeTexasCorTap
                 },
                 Timeout.Infinite);
 
-            CommunicationMonitor = new LightingGatewayStatusMonitor(this, Url, 60000, 120000);
+            CommunicationMonitor = new LightingGatewayStatusMonitor(this, _client, Url, 60000, 120000);
 
             DeviceManager.AllDevicesActivated +=
                 (sender, args) => CrestronInvoke.BeginInvoke(o => CommunicationMonitor.Start());
@@ -79,12 +82,29 @@ namespace PoeTexasCorTap
                     new CTimer(
                         o =>
                         {
-                            using (var client = new HttpClient())
-                            using (var response = client.Dispatch(request))
+                            try
                             {
-                                Debug.Console(DebugLevel, this, "Current Fixtures: {0}", response.ContentString);
+                                using (var response = _client.Dispatch(request))
+                                    Debug.Console(DebugLevel, this, "Current Fixtures: {0}", response.ContentString);
                             }
-                            ;
+                            catch (HttpsException ex)
+                            {
+                                Debug.Console(
+                                    1,
+                                    this,
+                                    "Caught an Https Exception dispatching a lighting poll: {0}{1}",
+                                    ex.Message,
+                                    ex.StackTrace);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Console(
+                                    1,
+                                    this,
+                                    "Caught an error dispatching a lighting poll: {0}{1}",
+                                    ex.Message,
+                                    ex.StackTrace);
+                            }
                         },
                         null,
                         30000,
@@ -148,7 +168,10 @@ namespace PoeTexasCorTap
 
         public static HttpClientRequest GetRequestForInfo(string url)
         {
-            var request = new HttpClientRequest {RequestType = RequestType.Get};
+            var request = new HttpClientRequest { RequestType = RequestType.Get };
+
+            request.Header.SetHeaderValue("accept", "application/json");
+            request.FinalizeHeader();
             request.Url.Parse("http://" + url + "/v2/devices/");
             return request;
         }
@@ -162,17 +185,20 @@ namespace PoeTexasCorTap
             {
                 RequestType = RequestType.Put,
                 ContentString = JsonConvert.SerializeObject(body),
-                Header = new HttpHeaders {ContentType = "application/json"}
             };
 
-            request.Url.Parse("http://" + url + "/v2/devices/levels/");
+            request.Url.Parse("http://" + url + "/v2/devices/levels");
+            request.Header.RequestType = "PUT";
+            request.Header.ContentType = "application/json";
+            request.Header.AddHeader(new HttpHeader("accept", "application/json"));
+            request.FinalizeHeader();
+
             return request;
         }
 
-        public static void DispatchLevelRequest(string url, string fixtureName, int requestedLevel)
+        public static void DispatchLevelRequest(HttpClient client, string url, string fixtureName, int requestedLevel)
         {
             var request = GetRequestForLevel(url, fixtureName, requestedLevel);
-            using (var client = new HttpClient())
             using (var response = client.Dispatch(request))
             {
                 var responseString = response.ContentString;

@@ -12,11 +12,12 @@ namespace PoeTexasCorTap
     {
         private readonly string _url;
         private readonly CTimer _pollTimer;
-        private readonly HttpClient _client = new HttpClient();
+        private readonly HttpClient _client;
 
-        public LightingGatewayStatusMonitor(IKeyed parent, string url, long warningTime, long errorTime) : base(parent, warningTime, errorTime)
+        public LightingGatewayStatusMonitor(IKeyed parent, HttpClient client, string url, long warningTime, long errorTime) : base(parent, warningTime, errorTime)
         {
             _url = url;
+            _client = client;
             _pollTimer = new CTimer(o => Poll(), Timeout.Infinite);
         }
 
@@ -54,6 +55,10 @@ namespace PoeTexasCorTap
         public static HttpClientRequest GetPollRequest(string url)
         {
             var request = new HttpClientRequest { RequestType = RequestType.Get };
+
+            request.Header.SetHeaderValue("accept", "application/json");
+            request.FinalizeHeader();
+
             request.Url.Parse("http://" + url + "/v2/config/version");
             return request;
         }
