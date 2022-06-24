@@ -12,12 +12,10 @@ namespace PoeTexasCorTap
     {
         private readonly string _url;
         private readonly CTimer _pollTimer;
-        private readonly HttpClient _client;
 
-        public LightingGatewayStatusMonitor(IKeyed parent, HttpClient client, string url, long warningTime, long errorTime) : base(parent, warningTime, errorTime)
+        public LightingGatewayStatusMonitor(IKeyed parent, string url, long warningTime, long errorTime) : base(parent, warningTime, errorTime)
         {
             _url = url;
-            _client = client;
             _pollTimer = new CTimer(o => Poll(), Timeout.Infinite);
         }
 
@@ -39,10 +37,11 @@ namespace PoeTexasCorTap
             try
             {
                 var request = GetPollRequest(_url);
-                _client.Dispatch(request);
-                ResetErrorTimers();
+                using (var client = new HttpClient())
+                using (client.Dispatch(request))
+                    ResetErrorTimers();
             }
-            catch (HttpsException ex)
+            catch (HttpException ex)
             {
                 Debug.Console(1, "Caught an Https Exception dispatching a lighting poll: {0}{1}", ex.Message, ex.StackTrace);
             }

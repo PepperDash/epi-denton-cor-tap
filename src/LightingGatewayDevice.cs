@@ -26,7 +26,6 @@ namespace PoeTexasCorTap
             new Dictionary<string, CTimer>(StringComparer.OrdinalIgnoreCase);
 
         private int _requestedLevel;
-        private readonly HttpClient _client = new HttpClient();
 
         public LightingGatewayDevice(DeviceConfig config) : base(config.Key, config.Name)
         {
@@ -41,14 +40,14 @@ namespace PoeTexasCorTap
                 {
                     try
                     {
-                        DispatchLevelRequest(_client, Url, FixtureName, _requestedLevel);
+                        DispatchLevelRequest(Url, FixtureName, _requestedLevel);
                     }
-                    catch (HttpsException ex)
+                    catch (HttpException ex)
                     {
                         Debug.Console(
                             1,
                             this,
-                            "Caught an Https Exception dispatching a lighting command: {0}{1}",
+                            "Caught an Http Exception dispatching a lighting command: {0}{1}",
                             ex.Message,
                             ex.StackTrace);
                     }
@@ -64,7 +63,7 @@ namespace PoeTexasCorTap
                 },
                 Timeout.Infinite);
 
-            CommunicationMonitor = new LightingGatewayStatusMonitor(this, _client, Url, 60000, 120000);
+            CommunicationMonitor = new LightingGatewayStatusMonitor(this, Url, 60000, 120000);
 
             DeviceManager.AllDevicesActivated +=
                 (sender, args) => CrestronInvoke.BeginInvoke(o => CommunicationMonitor.Start());
@@ -84,7 +83,8 @@ namespace PoeTexasCorTap
                         {
                             try
                             {
-                                using (var response = _client.Dispatch(request))
+                                using (var client = new HttpClient())
+                                using (var response = client.Dispatch(request))
                                     Debug.Console(DebugLevel, this, "Current Fixtures: {0}", response.ContentString);
                             }
                             catch (HttpsException ex)
@@ -146,7 +146,6 @@ namespace PoeTexasCorTap
                         request.ContentString,
                         response.Code);
                 }
-                ;
             }
             catch (Exception ex)
             {
@@ -196,9 +195,10 @@ namespace PoeTexasCorTap
             return request;
         }
 
-        public static void DispatchLevelRequest(HttpClient client, string url, string fixtureName, int requestedLevel)
+        public static void DispatchLevelRequest(string url, string fixtureName, int requestedLevel)
         {
             var request = GetRequestForLevel(url, fixtureName, requestedLevel);
+            using (var client = new HttpClient())
             using (var response = client.Dispatch(request))
             {
                 var responseString = response.ContentString;
