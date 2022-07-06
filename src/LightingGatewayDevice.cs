@@ -33,7 +33,8 @@ namespace PoeTexasCorTap
             var props = config.Properties.ToObject<LightingGatewayConfig>();
             FixtureName = props.FixtureName;
             Url = props.Url;
-            LightingScenes = props.Scenes.ToList();
+            foreach (var scene in props.Scenes.Select(scene => new LightingScene { ID = scene.Id, Name = scene.Name }))
+                LightingScenes.Add(scene);
 
             _levelDispatchTimer = new CTimer(
                 o =>
@@ -69,6 +70,15 @@ namespace PoeTexasCorTap
                 (sender, args) => CrestronInvoke.BeginInvoke(o => CommunicationMonitor.Start());
             IsOnline.OutputChange +=
                 (sender, args) => Debug.Console(1, Debug.ErrorLogLevel.Notice, "Online Status:{0}", args.BoolValue);
+
+            CrestronEnvironment.ProgramStatusEventHandler += type =>
+            {
+                if (type != eProgramStatusEventType.Stopping)
+                    return;
+
+                _levelDispatchTimer.Stop();
+                _levelDispatchTimer.Dispose();
+            };
         }
 
         public override bool CustomActivate()
@@ -116,13 +126,59 @@ namespace PoeTexasCorTap
 
         public override void LinkToApi(BasicTriList trilist, uint joinStart, string joinMapKey, EiscApiAdvanced bridge)
         {
-            LinkLightingToApi(this, trilist, joinStart, joinMapKey, bridge);
-            var joinMap = new LightingGatewayJoinMap(joinStart);
-            if (bridge != null)
-                bridge.AddJoinMap(Key + "-custom", joinMap);
+            var joinMap = new GenericLightingJoinMap(joinStart);
 
-            trilist.SetUShortSigAction(joinMap.RampFixture.JoinNumber, SetLoadLevel);
-            trilist.SetString(joinMap.FixtureName.JoinNumber, string.IsNullOrEmpty(Name) ? FixtureName : Name);
+            var joinMapSerialized = JoinMapHelper.GetSerializedJoinMapForDevice(joinMapKey);
+
+            if (!string.IsNullOrEmpty(joinMapSerialized))
+                joinMap = JsonConvert.DeserializeObject<GenericLightingJoinMap>(joinMapSerialized);
+
+            if (bridge != null)
+            {
+                bridge.AddJoinMap(Key, joinMap);
+            }
+            else
+            {
+                Debug.Console(0, this, "Please update config to use 'eiscapiadvanced' to get all join map features for this device.");
+            }
+
+            Debug.Console(1, "Linking to Trilist '{0}'", trilist.ID.ToString("X"));
+            Debug.Console(0, "Linking to Lighting Type {0}", GetType().Name);
+
+            IsOnline.LinkInputSig(trilist.BooleanInput[joinMap.IsOnline.JoinNumber]);
+            // GenericLighitng Actions & FeedBack
+            trilist.SetUShortSigAction(joinMap.SelectScene.JoinNumber,
+                u =>
+                {
+                    var scene = LightingScenes.ElementAtOrDefault(u);
+                    if (scene != null)
+                        SelectScene(scene);
+                });
+
+            var sceneIndex = 0;
+            foreach (var scene in LightingScenes)
+            {
+                var index = sceneIndex;
+                trilist.SetSigTrueAction((uint)(joinMap.SelectSceneDirect.JoinNumber + sceneIndex),
+                    () =>
+                    {
+                        var s = LightingScenes.ElementAtOrDefault(index);
+                        if (s != null)
+                            SelectScene(s);
+                    });
+
+                scene.IsActiveFeedback.LinkInputSig(trilist.BooleanInput[(uint)(joinMap.SelectSceneDirect.JoinNumber + sceneIndex)]);
+                trilist.SetString((uint)(joinMap.SelectSceneDirect.JoinNumber + sceneIndex), scene.Name);
+                trilist.BooleanInput[(uint)(joinMap.ButtonVisibility.JoinNumber + sceneIndex)].BoolValue = true;
+                sceneIndex++;
+            }
+
+            var customJoinMap = new LightingGatewayJoinMap(joinStart);
+            if (bridge != null)
+                bridge.AddJoinMap(Key + "-custom", customJoinMap);
+
+            trilist.SetUShortSigAction(customJoinMap.RampFixture.JoinNumber, SetLoadLevel);
+            trilist.SetString(customJoinMap.FixtureName.JoinNumber, string.IsNullOrEmpty(Name) ? FixtureName : Name);
         }
 
         public override void SelectScene(LightingScene scene)
@@ -130,30 +186,34 @@ namespace PoeTexasCorTap
             try
             {
                 Debug.Console(
-                    VerboseLevel,
+                    1,
                     this,
                     "SelectScene: Scene called with ID: {0} and Name: {1}",
                     scene.ID,
                     scene.Name);
+
                 var request = scene.GetRequestForScene(Url);
                 using (var client = new HttpClient())
                 using (var response = client.Dispatch(request))
                 {
                     Debug.Console(
-                        DebugLevel,
+                        1,
                         this,
-                        "SelectScene: Dispatched a lighting command: {0} | Response: {1}",
-                        request.ContentString,
+                        "SelectScene: Dispatched a scene request: {0} | Response: {1}",
+                        request.Url.PathAndParams,
                         response.Code);
+
+                    if (response.Code != 200)
+                        throw new HttpException(response);
                 }
             }
             catch (Exception ex)
             {
                 Debug.Console(
-                    DebugLevel,
+                    1,
                     this,
                     Debug.ErrorLogLevel.Notice,
-                    "SelectScene: Caught an error dispatching a lighting command: {0}{1}",
+                    "SelectScene: Caught an error dispatching a scene request: {0}{1}",
                     ex.Message,
                     ex.StackTrace);
             }
