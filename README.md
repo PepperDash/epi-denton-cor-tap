@@ -1,4 +1,4 @@
-![PepperDash Logo](/images/logo_pdt_no_tagline_600.png)
+![PepperDash Logo](/images/essentials-plugin-blue.png)
 ## License
 Provided under MIT license
 # PepperDash Essentials DENTON-COR-TAP Plugin (c) 2022
