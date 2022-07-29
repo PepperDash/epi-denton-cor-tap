@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using PepperDash.Essentials.Core.Lighting;
 
 namespace PoeTexasCorTap
 {
@@ -13,11 +12,5 @@ namespace PoeTexasCorTap
         {
             Scenes = new List<LightingSceneConfig>();
         }
-    }
-
-    public class LightingSceneConfig
-    {
-        public string Name { get; set; }
-        public string Id { get; set; }
     }
 }
