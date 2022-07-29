@@ -93,6 +93,7 @@
     <Compile Include="LightingGatewayFactory.cs" />
     <Compile Include="LightingGatewayJoinMap.cs" />
     <Compile Include="LightingGatewayStatusMonitor.cs" />
+    <Compile Include="LightingSceneConfig.cs" />
     <Compile Include="LightingSceneExt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="Properties\ControlSystem.cfg" />

@@ -11,7 +11,7 @@ namespace PoeTexasCorTap
         {
             var request = new HttpClientRequest { RequestType = RequestType.Put };
             request.Header.SetHeaderValue("Content-Type", "application/json");
-            request.Url.Parse("http://" + hostname + "/v2/scenes/invoke?name=" + scene.Name);
+            request.Url.Parse("http://" + hostname + "/v2/scenes/invoke?name=" + scene.ID);
 
             Debug.Console(2, "PoeTexasCorTap {0}", new String('-', 80));
             Debug.Console(2, "PoeTexasCorTap:LightingSceneExt:HttpClientRequest: RequestType = {0}", request.RequestType);
