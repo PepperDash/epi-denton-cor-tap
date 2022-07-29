@@ -1,0 +1,29 @@
+# .github/workflows/version.yml
+name: Tag non-main
+
+on: 
+  push:
+    branches-ignore: [main]
+
+env:
+  BUILD_TYPE: Release
+  
+jobs:
+  Build-Version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}   # checkout the correct branch name
+          fetch-depth: 0                # fetch the whole repo history
+
+      - name: Set Version
+        id: ver
+        uses: codacy/git-version@2.5.4
+        with:
+          release-branch: main
+          
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.ver.outputs.version }}
