@@ -92,6 +92,7 @@
     <Compile Include="LightingGatewayDeviceInfo.cs" />
     <Compile Include="LightingGatewayFactory.cs" />
     <Compile Include="LightingGatewayJoinMap.cs" />
+    <Compile Include="LightingGatewayQueue.cs" />
     <Compile Include="LightingGatewayStatusMonitor.cs" />
     <Compile Include="LightingSceneConfig.cs" />
     <Compile Include="LightingSceneExt.cs" />

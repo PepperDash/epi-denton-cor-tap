@@ -3,11 +3,8 @@ using Newtonsoft.Json;
 
 namespace PoeTexasCorTap
 {
-    public class LightingGatewayState
+    public class LightingDeviceState
     {
-        [JsonProperty("uuid")]
-        public Guid Uuid { get; set; }
-
         [JsonProperty("type")]
         public string Type { get; set; }
 
@@ -17,32 +14,23 @@ namespace PoeTexasCorTap
         [JsonProperty("displayname")]
         public string Displayname { get; set; }
 
-        [JsonProperty("room")]
-        public string Room { get; set; }
-
         [JsonProperty("iface")]
         public Iface Iface { get; set; }
 
         [JsonProperty("outputid")]
-        public long Outputid { get; set; }
+        public string Outputid { get; set; }
 
         [JsonProperty("image")]
         public string Image { get; set; }
 
-        [JsonProperty("candledim")]
-        public bool Candledim { get; set; }
+        [JsonProperty("commonanode")]
+        public bool Commonanode { get; set; }
 
         [JsonProperty("twelvevolt")]
         public bool Twelvevolt { get; set; }
 
         [JsonProperty("parameters")]
         public Parameters Parameters { get; set; }
-
-        [JsonProperty("level")]
-        public long Level { get; set; }
-
-        [JsonProperty("lastupdated")]
-        public DateTime Lastupdated { get; set; }
 
         [JsonProperty("powerwatts")]
         public long Powerwatts { get; set; }
@@ -55,36 +43,90 @@ namespace PoeTexasCorTap
 
         [JsonProperty("dmxaddr")]
         public long Dmxaddr { get; set; }
+
+        [JsonProperty("level", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Level { get; set; }
+
+        [JsonProperty("brightness", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Brightness { get; set; }
+
+        [JsonProperty("colortemp", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Colortemp { get; set; }
+
+        [JsonProperty("red", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Red { get; set; }
+
+        [JsonProperty("green", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Green { get; set; }
+
+        [JsonProperty("blue", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Blue { get; set; }
+
+        [JsonProperty("white", NullValueHandling = NullValueHandling.Ignore)]
+        public long? White { get; set; }
+
+        [JsonProperty("amber", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Amber { get; set; }
+
+        [JsonProperty("warmwhite", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Warmwhite { get; set; }
+
+        [JsonProperty("coldwhite", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Coldwhite { get; set; }
+
+        [JsonProperty("compassdegrees", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Compassdegrees { get; set; }
     }
 
     public class Iface
     {
-        [JsonProperty("name")]
+        [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
         public string Name { get; set; }
 
-        [JsonProperty("deviceoptions")]
-        public Deviceoptions Deviceoptions { get; set; }
+        [JsonProperty("deviceoptions", NullValueHandling = NullValueHandling.Ignore)]
+        public DeviceOptions DeviceOptions { get; set; }
 
-        [JsonProperty("driver")]
+        [JsonProperty("driver", NullValueHandling = NullValueHandling.Ignore)]
         public Driver Driver { get; set; }
     }
 
-    public class Deviceoptions
+    public class DeviceOptions
     {
-        [JsonProperty("device_uuid")]
+        [JsonProperty("device_uuid", NullValueHandling = NullValueHandling.Ignore)]
         public string DeviceUuid { get; set; }
 
-        [JsonProperty("device_type")]
+        [JsonProperty("device_type", NullValueHandling = NullValueHandling.Ignore)]
         public string DeviceType { get; set; }
 
-        [JsonProperty("output_start")]
-        public long OutputStart { get; set; }
-
-        [JsonProperty("power_uuid")]
+        [JsonProperty("power_uuid", NullValueHandling = NullValueHandling.Ignore)]
         public string PowerUuid { get; set; }
 
-        [JsonProperty("power")]
-        public long Power { get; set; }
+        [JsonProperty("power_bus", NullValueHandling = NullValueHandling.Ignore)]
+        public long? PowerBus { get; set; }
+
+        [JsonProperty("output_channel", NullValueHandling = NullValueHandling.Ignore)]
+        public string OutputChannel { get; set; }
+
+        [JsonProperty("inverted", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Inverted { get; set; }
+
+        [JsonProperty("deviceid", NullValueHandling = NullValueHandling.Ignore)]
+        public string Deviceid { get; set; }
+
+        [JsonProperty("model", NullValueHandling = NullValueHandling.Ignore)]
+        public string Model { get; set; }
+
+        [JsonProperty("repeat", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Repeat { get; set; }
+
+        [JsonProperty("offset", NullValueHandling = NullValueHandling.Ignore)]
+        public long? Offset { get; set; }
+
+        [JsonProperty("eep", NullValueHandling = NullValueHandling.Ignore)]
+        public string Eep { get; set; }
+
+        [JsonProperty("fileName", NullValueHandling = NullValueHandling.Ignore)]
+        public string FileName { get; set; }
     }
 
     public class Driver
@@ -94,46 +136,46 @@ namespace PoeTexasCorTap
     public class Parameters
     {
         [JsonProperty("dimoptions")]
-        public long Dimoptions { get; set; }
+        public string Dimoptions { get; set; }
 
         [JsonProperty("dimrate")]
-        public long Dimrate { get; set; }
+        public string Dimrate { get; set; }
 
         [JsonProperty("brightenrate")]
-        public long Brightenrate { get; set; }
+        public string Brightenrate { get; set; }
 
         [JsonProperty("resptoocc")]
-        public long Resptoocc { get; set; }
+        public string Resptoocc { get; set; }
 
         [JsonProperty("resptovac")]
-        public long Resptovac { get; set; }
+        public string Resptovac { get; set; }
 
         [JsonProperty("resptodl50")]
-        public long Resptodl50 { get; set; }
+        public string Resptodl50 { get; set; }
 
         [JsonProperty("resptodl40")]
-        public long Resptodl40 { get; set; }
+        public string Resptodl40 { get; set; }
 
         [JsonProperty("resptodl30")]
-        public long Resptodl30 { get; set; }
+        public string Resptodl30 { get; set; }
 
         [JsonProperty("resptodl20")]
-        public long Resptodl20 { get; set; }
+        public string Resptodl20 { get; set; }
 
         [JsonProperty("resptodl10")]
-        public long Resptodl10 { get; set; }
+        public string Resptodl10 { get; set; }
 
         [JsonProperty("resptodl0")]
-        public long Resptodl0 { get; set; }
+        public string Resptodl0 { get; set; }
 
         [JsonProperty("manualceiling")]
-        public long Manualceiling { get; set; }
+        public string Manualceiling { get; set; }
 
         [JsonProperty("manualfloor")]
-        public long Manualfloor { get; set; }
+        public string Manualfloor { get; set; }
 
         [JsonProperty("dimtooff")]
-        public long Dimtooff { get; set; }
+        public string Dimtooff { get; set; }
 
         [JsonProperty("dlenable")]
         public bool Dlenable { get; set; }
@@ -160,15 +202,15 @@ namespace PoeTexasCorTap
     public class Powerinfo
     {
         [JsonProperty("baseline")]
-        public long Baseline { get; set; }
+        public string Baseline { get; set; }
 
         [JsonProperty("budget")]
-        public long Budget { get; set; }
-
-        [JsonProperty("maxload")]
-        public long Maxload { get; set; }
+        public string Budget { get; set; }
 
         [JsonProperty("measured")]
         public string Measured { get; set; }
+
+        [JsonProperty("maxload")]
+        public string Maxload { get; set; }
     }
 }
