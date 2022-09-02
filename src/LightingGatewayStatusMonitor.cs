@@ -15,6 +15,8 @@ namespace PoeTexasCorTap
         private readonly CTimer _pollTimer;
         private static GenericQueue _queue;
 
+        public readonly HttpClient Client = new HttpClient {KeepAlive = true};
+
         class ActionQueueMessage : IQueueMessage
         {
             public Action DispatchAction { get; set; }
@@ -66,13 +68,12 @@ namespace PoeTexasCorTap
             try
             {
                 var request = GetPollRequest(_url);
-                using (var client = new HttpClient())
-                using (var response = client.Dispatch(request))
-                {
-                    if (response.Code != 200) return;
-                    Status = MonitorStatus.IsOk;
-                    ResetErrorTimers();
-                }
+                var response = Client.Dispatch(request);
+                if (response.Code != 200) 
+                    return;
+
+                Status = MonitorStatus.IsOk;
+                ResetErrorTimers();
             }
             catch (HttpException ex)
             {
@@ -89,8 +90,6 @@ namespace PoeTexasCorTap
             var request = new HttpClientRequest { RequestType = RequestType.Get };
 
             request.Header.SetHeaderValue("accept", "application/json");
-            request.FinalizeHeader();
-
             request.Url.Parse("http://" + url + "/v2/config/version");
             return request;
         }
