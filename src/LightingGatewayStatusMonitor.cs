@@ -1,7 +1,6 @@
 ﻿using System;
 using Crestron.SimplSharp;
 using Crestron.SimplSharp.Net.Http;
-using Crestron.SimplSharpPro.CrestronThread;
 using PepperDash.Core;
 using PepperDash.Essentials.Core;
 using PepperDash.Essentials.Core.Queues;
@@ -11,32 +10,18 @@ namespace PoeTexasCorTap
 {
     public class LightingGatewayStatusMonitor : StatusMonitorBase
     {
+        private readonly LightingGatewayDevice _parent;
         private readonly string _url;
         private readonly CTimer _pollTimer;
-        private static GenericQueue _queue;
+        private readonly LightingGatewayQueue _queue;
 
-        public readonly HttpClient Client = new HttpClient {KeepAlive = true};
-
-        class ActionQueueMessage : IQueueMessage
+        public LightingGatewayStatusMonitor(LightingGatewayDevice parent, string url, long warningTime, long errorTime, LightingGatewayQueue queue)
+            : base(parent, warningTime, errorTime)
         {
-            public Action DispatchAction { get; set; }
-
-            public void Dispatch()
-            {
-                if (DispatchAction == null)
-                    return;
-
-                DispatchAction();
-            }
-        }
-
-        public LightingGatewayStatusMonitor(IKeyed parent, string url, long warningTime, long errorTime) : base(parent, warningTime, errorTime)
-        {
+            _parent = parent;
             _url = url;
-            _pollTimer = new CTimer(o => _queue.Enqueue(new ActionQueueMessage{ DispatchAction = Poll }), Timeout.Infinite);
-
-            if (_queue == null)
-                _queue = new GenericQueue("Denton-Cor-Tap-Monitor-Queue", Thread.eThreadPriority.LowestPriority, 50);
+            _queue = queue;
+            _pollTimer = new CTimer(o => _queue.Enqueue(Poll), Timeout.Infinite);
 
             Status = MonitorStatus.InError;
 
@@ -68,12 +53,14 @@ namespace PoeTexasCorTap
             try
             {
                 var request = GetPollRequest(_url);
-                var response = Client.Dispatch(request);
-                if (response.Code != 200) 
-                    return;
+                using (var response = _parent.Client.Dispatch(request))
+                {
+                    if (response.Code != 200)
+                        return;
 
-                Status = MonitorStatus.IsOk;
-                ResetErrorTimers();
+                    Status = MonitorStatus.IsOk;
+                    ResetErrorTimers();
+                }
             }
             catch (HttpException ex)
             {
@@ -88,7 +75,6 @@ namespace PoeTexasCorTap
         public static HttpClientRequest GetPollRequest(string url)
         {
             var request = new HttpClientRequest { RequestType = RequestType.Get };
-
             request.Header.SetHeaderValue("accept", "application/json");
             request.Url.Parse("http://" + url + "/v2/config/version");
             return request;

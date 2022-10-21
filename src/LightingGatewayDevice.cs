@@ -4,8 +4,10 @@ using System.Linq;
 using Crestron.SimplSharp;
 using Crestron.SimplSharp.Net.Http;
 using Crestron.SimplSharp.Net.Https;
+using Crestron.SimplSharpPro.CrestronThread;
 using Crestron.SimplSharpPro.DeviceSupport;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PepperDash.Core;
 using PepperDash.Essentials.Core;
 using PepperDash.Essentials.Core.Bridges;
@@ -40,7 +42,7 @@ namespace PoeTexasCorTap
 
             _dispatchQueue = new LightingGatewayQueue(Key + "-queue");
 
-            CommunicationMonitor = new LightingGatewayStatusMonitor(this, Url, 60000, 120000);
+            CommunicationMonitor = new LightingGatewayStatusMonitor(this, Url, 60000, 120000, _dispatchQueue);
 
             DeviceManager.AllDevicesActivated +=
                 (sender, args) => CrestronInvoke.BeginInvoke(o => CommunicationMonitor.Start());
@@ -59,14 +61,18 @@ namespace PoeTexasCorTap
         {
             _dispatchQueue.Enqueue(() =>
             {
+                var content = string.Empty;
+                var path = string.Empty;
                 try
                 {
                     var request = GetRequestForInfo(Url);
-                    var response = Client.Dispatch(request);
-                    Debug.Console(
-                            1,
-                            this,
-                            "Dispatched a level poll");
+                    path = request.Url.PathAndParams;
+                    using (var response = Client.Dispatch(request))
+                    {
+                        Debug.Console(
+                                1,
+                                this,
+                                "Dispatched a level poll");
 
                         Debug.Console(
                             2,
@@ -74,36 +80,60 @@ namespace PoeTexasCorTap
                             "Response: {0}",
                             response.ContentString ?? String.Empty);
 
-                    var data = JsonConvert.DeserializeObject<List<LightingDeviceState>>(response.ContentString);
-                    data.Where(d => d.Name.Equals(FixtureName, StringComparison.OrdinalIgnoreCase))
-                        .ToList()
-                        .ForEach(
-                            d =>
-                            {
-                                var result = d.Level ?? default (int);
-                                _currentLevel = (int) result;
+                        if (string.IsNullOrEmpty(response.ContentString))
+                            return;
 
-                                Debug.Console(1, this, "Setting current level:{0}", _currentLevel);
-                                CurrentLevelFeedback.FireUpdate();
-                            });
+                        content = response.ContentString;
+                        var json = JToken.Parse(content);
+
+                        var nonArrayToken = json.SelectToken("fixtures");
+                        if (nonArrayToken != null)
+                        {
+                            var data = nonArrayToken.ToObject<List<LightingDeviceState>>();
+                            data.Where(d => d.Name.Equals(FixtureName, StringComparison.OrdinalIgnoreCase))
+                                .ToList()
+                                .ForEach(
+                                    d =>
+                                    {
+                                        var result = d.Level ?? default(int);
+                                        _currentLevel = (int)result;
+
+                                        Debug.Console(1, this, "Setting current level:{0}", _currentLevel);
+                                        CurrentLevelFeedback.FireUpdate();
+                                    });
+                        }
+                        else
+                        {
+                            var data = json.ToObject<List<LightingDeviceState>>();
+                            data.Where(d => d.Name.Equals(FixtureName, StringComparison.OrdinalIgnoreCase))
+                                .ToList()
+                                .ForEach(
+                                    d =>
+                                    {
+                                        var result = d.Level ?? default(int);
+                                        _currentLevel = (int)result;
+
+                                        Debug.Console(1, this, "Setting current level:{0}", _currentLevel);
+                                        CurrentLevelFeedback.FireUpdate();
+                                    }); 
+                        }
+                    }
                 }
                 catch (HttpsException ex)
                 {
                     Debug.Console(
                         1,
                         this,
-                        "Caught an Https Exception dispatching a lighting poll: {0}{1}",
-                        ex.Message,
-                        ex.StackTrace);
+                        "Caught an Https Exception dispatching a lighting poll: {0} {1} {2}",
+                        ex.Message, path, content);
                 }
                 catch (Exception ex)
                 {
                     Debug.Console(
                         1,
                         this,
-                        "Caught an error dispatching a lighting poll: {0}{1}",
-                        ex.Message,
-                        ex.StackTrace);
+                        "Caught an error dispatching a lighting poll: {0} {1} {2}",
+                        ex.Message, path, content);
                 }
             });
         }
@@ -188,16 +218,19 @@ namespace PoeTexasCorTap
                         scene.Name);
 
                     var request = scene.GetRequestForScene(Url);
-                    var response = Client.Dispatch(request);
-                    Debug.Console(
-                        2,
-                        this,
-                        "SelectScene: Dispatched a scene request: {0} | Response: {1}",
-                        request.Url.PathAndParams,
-                        response.Code);
+                    using (var response = Client.Dispatch(request))
+                    {
+                        Debug.Console(
+                            2,
+                            this,
+                            "SelectScene: Dispatched a scene request: {0} | Response: {1}",
+                            request.Url.PathAndParams,
+                            response.Code);
 
-                    if (response.Code != 200)
-                        throw new HttpException(response);
+                        if (response.Code != 200)
+                            throw new HttpException(response);
+                        
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -216,8 +249,9 @@ namespace PoeTexasCorTap
 
         public void SetLoadLevel(ushort level)
         {
+            Debug.Console(1, this, "Thread ID :{0}", Thread.CurrentThread.ManagedThreadId);
             _dispatchQueue.Enqueue(() => DispatchLevelRequest(Url, FixtureName, level, Client));
-            _levelPoll.Reset(100, 5000);
+            _levelPoll.Reset(10, 5000);
         }
 
         public static HttpClientRequest GetRequestForInfo(string url)
@@ -253,13 +287,15 @@ namespace PoeTexasCorTap
         public static void DispatchLevelRequest(string url, string fixtureName, int requestedLevel, HttpClient client)
         {
             var request = GetRequestForLevelSet(url, fixtureName, requestedLevel);
-            var response = client.Dispatch(request);
-            var responseString = response.ContentString;
-            Debug.Console(
-                2,
-                "Dispatched a level request:{0}: Response: {1}",
-                requestedLevel,
-                responseString ?? String.Empty);
+            using (var response = client.Dispatch(request))
+            {
+                var responseString = response.ContentString;
+                Debug.Console(
+                    1,
+                    "Dispatched a level request:{0}: Response: {1}",
+                    requestedLevel,
+                    responseString ?? String.Empty);
+            };
         }
 
         public StatusMonitorBase CommunicationMonitor { get; private set; }
