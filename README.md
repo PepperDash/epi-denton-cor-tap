@@ -110,3 +110,84 @@ This repo contains two Github Action workflows that will build this project auto
 Builds on the `Main` branch will ONLY be triggered by manually creating a release using the web interface in the repository. They will be versioned with the tag that is created when the release is created. The tags MUST take the form `major.minor.revision` to be compatible with the build process. A tag like `v0.1.0-alpha` is NOT compatabile and may result in the build process failing.
 
 If you have any questions about the action, contact Andrew Welker or Neil Dorin.
+<!-- START Minimum Essentials Framework Versions -->
+### Minimum Essentials Framework Versions
+
+- 1.9.0
+<!-- END Minimum Essentials Framework Versions -->
+<!-- START Config Example -->
+### Config Example
+
+```json
+{
+    "key": "GeneratedKey",
+    "uid": 1,
+    "name": "GeneratedName",
+    "type": "LightingGateway",
+    "group": "Group",
+    "properties": {
+        "Url": "SampleString",
+        "Scenes": [
+            {
+                "Name": "SampleString",
+                "Id": "SampleString"
+            }
+        ],
+        "FixtureName": "SampleString"
+    }
+}
+```
+<!-- END Config Example -->
+<!-- START Supported Types -->
+
+<!-- END Supported Types -->
+<!-- START Join Maps -->
+### Join Maps
+
+#### Analogs
+
+| Join | Type (RW) | Description |
+| --- | --- | --- |
+| 1 | R | Lighting Controller Ramp Fixture |
+
+#### Serials
+
+| Join | Type (RW) | Description |
+| --- | --- | --- |
+| 2 | R | Lighting Fixture Name |
+<!-- END Join Maps -->
+<!-- START Interfaces Implemented -->
+### Interfaces Implemented
+
+- IKeyed
+- ICommunicationMonitor
+- IOnline
+<!-- END Interfaces Implemented -->
+<!-- START Base Classes -->
+### Base Classes
+
+- JoinMapBaseAdvanced
+- StatusMonitorBase
+- LightingBase
+<!-- END Base Classes -->
+<!-- START Public Methods -->
+### Public Methods
+
+- public void Enqueue(Action a)
+- public void Poll()
+- public void Poll()
+- public void SetLoadLevel(ushort level)
+- public void ResetDebugLevels()
+- public void SetDebugLevels(uint level)
+<!-- END Public Methods -->
+<!-- START Bool Feedbacks -->
+### Bool Feedbacks
+
+- IsOnline
+<!-- END Bool Feedbacks -->
+<!-- START Int Feedbacks -->
+
+<!-- END Int Feedbacks -->
+<!-- START String Feedbacks -->
+
+<!-- END String Feedbacks -->
