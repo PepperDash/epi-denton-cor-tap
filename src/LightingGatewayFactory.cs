@@ -8,7 +8,7 @@ namespace PoeTexasCorTap
     {
         public LightingGatewayFactory()
         {
-            MinimumEssentialsFrameworkVersion = "1.9.0";
+            MinimumEssentialsFrameworkVersion = "2.27.1";
             TypeNames = new List<string> {"dentoncortap"};
         }
         public override EssentialsDevice BuildDevice(DeviceConfig dc)

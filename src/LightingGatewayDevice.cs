@@ -13,6 +13,9 @@ using PepperDash.Essentials.Core;
 using PepperDash.Essentials.Core.Bridges;
 using PepperDash.Essentials.Core.Config;
 using PepperDash.Essentials.Core.Lighting;
+#if SERIES4
+using LightingBase = PepperDash.Essentials.Devices.Common.Lighting.LightingBase;
+#endif
 using RequestType = Crestron.SimplSharp.Net.Http.RequestType;
 using Timeout = System.Threading.Timeout;
 
@@ -48,10 +51,21 @@ namespace PoeTexasCorTap
                 (sender, args) => CrestronInvoke.BeginInvoke(o => CommunicationMonitor.Start());
 
             IsOnline.OutputChange +=
-                (sender, args) => Debug.Console(1, Debug.ErrorLogLevel.Notice, "Online Status:{0}", args.BoolValue);
+                (sender, args) =>
+                {
+#if SERIES4
+                    Debug.LogInformation("Online Status:{status}", args.BoolValue);
+#else
+                    Debug.Console(1, Debug.ErrorLogLevel.Notice, "Online Status:{0}", args.BoolValue);
+#endif
+                };
 
             CurrentLevelFeedback =
+#if SERIES4
+                new IntFeedback("CurrentLevel",
+#else
                 new IntFeedback(
+#endif
                     () => CrestronEnvironment.ScaleWithLimits(_currentLevel, 10000, ushort.MinValue, ushort.MaxValue, 0));
 
             _levelPoll = new CTimer(o => Poll(), null, Timeout.Infinite, 5000);
@@ -69,6 +83,11 @@ namespace PoeTexasCorTap
                     path = request.Url.PathAndParams;
                     using (var response = Client.Dispatch(request))
                     {
+#if SERIES4
+                        Debug.LogVerbose("[{key}] Dispatched a level poll", Key);
+
+                        Debug.LogVerbose("[{key}] Response: {response}", Key, response.ContentString ?? String.Empty);
+#else
                         Debug.Console(
                                 1,
                                 this,
@@ -79,6 +98,7 @@ namespace PoeTexasCorTap
                             this,
                             "Response: {0}",
                             response.ContentString ?? String.Empty);
+#endif
 
                         if (string.IsNullOrEmpty(response.ContentString))
                             return;
@@ -98,7 +118,11 @@ namespace PoeTexasCorTap
                                         var result = d.Level ?? default(int);
                                         _currentLevel = (int)result;
 
+#if SERIES4
+                                        Debug.LogVerbose("[{key}] Setting current level:{level}", Key, _currentLevel);
+#else
                                         Debug.Console(1, this, "Setting current level:{0}", _currentLevel);
+#endif
                                         CurrentLevelFeedback.FireUpdate();
                                     });
                         }
@@ -113,7 +137,11 @@ namespace PoeTexasCorTap
                                         var result = d.Level ?? default(int);
                                         _currentLevel = (int)result;
 
+#if SERIES4
+                                        Debug.LogVerbose("[{key}] Setting current level:{level}", Key, _currentLevel);
+#else
                                         Debug.Console(1, this, "Setting current level:{0}", _currentLevel);
+#endif
                                         CurrentLevelFeedback.FireUpdate();
                                     }); 
                         }
@@ -121,19 +149,27 @@ namespace PoeTexasCorTap
                 }
                 catch (HttpsException ex)
                 {
+#if SERIES4
+                    Debug.LogError("[{key}] Caught an Https Exception dispatching a lighting poll: {message} {path} {content}", Key, ex.Message, path, content);
+#else
                     Debug.Console(
                         1,
                         this,
                         "Caught an Https Exception dispatching a lighting poll: {0} {1} {2}",
                         ex.Message, path, content);
+#endif
                 }
                 catch (Exception ex)
                 {
+#if SERIES4
+                    Debug.LogError("[{key}] Caught an error dispatching a lighting poll: {message} {path} {content}", Key, ex.Message, path, content);
+#else
                     Debug.Console(
                         1,
                         this,
                         "Caught an error dispatching a lighting poll: {0} {1} {2}",
                         ex.Message, path, content);
+#endif
                 }
             });
         }
@@ -159,12 +195,21 @@ namespace PoeTexasCorTap
             }
             else
             {
+#if SERIES4
+                Debug.LogWarning("[{key}] Please update config to use 'eiscapiadvanced' to get all join map features for this device.", Key);
+#else
                 Debug.Console(0, this,
                     "Please update config to use 'eiscapiadvanced' to get all join map features for this device.");
+#endif
             }
 
+#if SERIES4
+            Debug.LogVerbose("Linking to Trilist '{id}'", trilist.ID.ToString("X"));
+            Debug.LogVerbose("Linking to Lighting Type {type}", GetType().Name);
+#else
             Debug.Console(1, "Linking to Trilist '{0}'", trilist.ID.ToString("X"));
             Debug.Console(0, "Linking to Lighting Type {0}", GetType().Name);
+#endif
 
             IsOnline.LinkInputSig(trilist.BooleanInput[joinMap.IsOnline.JoinNumber]);
             // GenericLighitng Actions & FeedBack
@@ -210,22 +255,30 @@ namespace PoeTexasCorTap
             {
                 try
                 {
+#if SERIES4
+                    Debug.LogVerbose("[{key}] SelectScene: Scene called with ID: {id} and Name: {name}", Key, scene.ID, scene.Name);
+#else
                     Debug.Console(
                         1,
                         this,
                         "SelectScene: Scene called with ID: {0} and Name: {1}",
                         scene.ID,
                         scene.Name);
+#endif
 
                     var request = scene.GetRequestForScene(Url);
                     using (var response = Client.Dispatch(request))
                     {
+#if SERIES4
+                        Debug.LogVerbose("[{key}] SelectScene: Dispatched a scene request: {path} | Response: {code}", Key, request.Url.PathAndParams, response.Code);
+#else
                         Debug.Console(
                             2,
                             this,
                             "SelectScene: Dispatched a scene request: {0} | Response: {1}",
                             request.Url.PathAndParams,
                             response.Code);
+#endif
 
                         if (response.Code != 200)
                             throw new HttpException(response);
@@ -234,6 +287,9 @@ namespace PoeTexasCorTap
                 }
                 catch (Exception ex)
                 {
+#if SERIES4
+                    Debug.LogError("[{key}] SelectScene: Caught an error dispatching a scene request: {message}{stackTrace}", Key, ex.Message, ex.StackTrace);
+#else
                     Debug.Console(
                         1,
                         this,
@@ -241,6 +297,7 @@ namespace PoeTexasCorTap
                         "SelectScene: Caught an error dispatching a scene request: {0}{1}",
                         ex.Message,
                         ex.StackTrace);
+#endif
                 }
             });
 
@@ -249,7 +306,11 @@ namespace PoeTexasCorTap
 
         public void SetLoadLevel(ushort level)
         {
+#if SERIES4
+            Debug.LogVerbose("[{key}] Thread ID:{threadId}", Key, Thread.CurrentThread.ManagedThreadId);
+#else
             Debug.Console(1, this, "Thread ID :{0}", Thread.CurrentThread.ManagedThreadId);
+#endif
             _dispatchQueue.Enqueue(() => DispatchLevelRequest(Url, FixtureName, level, Client));
             _levelPoll.Reset(10, 5000);
         }
@@ -290,11 +351,15 @@ namespace PoeTexasCorTap
             using (var response = client.Dispatch(request))
             {
                 var responseString = response.ContentString;
+#if SERIES4
+                Debug.LogVerbose("Dispatched a level request:{level}: Response: {response}", requestedLevel, responseString ?? String.Empty);
+#else
                 Debug.Console(
                     1,
                     "Dispatched a level request:{0}: Response: {1}",
                     requestedLevel,
                     responseString ?? String.Empty);
+#endif
             };
         }
 
