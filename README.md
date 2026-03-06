@@ -2,6 +2,8 @@
 
 ![Essentials-v2](https://img.shields.io/badge/Essentials-v2-teal.svg)
 
+> **Branching:** `maintenance/1x` is the long-term maintenance line for Essentials v1.x / 3-series. `feature/2x` is the Essentials v2.x / 4-series upgrade branch.
+
 ## License
 Provided under MIT license
 # PepperDash Essentials DENTON-COR-TAP Plugin (c) 2022
