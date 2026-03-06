@@ -5,6 +5,10 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   getVersion:
     uses: PepperDash/workflow-templates/.github/workflows/essentialsplugins-getversion.yml@main

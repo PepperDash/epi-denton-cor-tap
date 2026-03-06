@@ -14,11 +14,11 @@ namespace PoeTexasCorTap
             request.Url.Parse("http://" + hostname + "/v2/scenes/invoke?name=" + scene.ID);
 
 #if SERIES4
-            Debug.LogVerbose("PoeTexasCorTap {sep}", new System.String('-', 80));
+            Debug.LogVerbose("PoeTexasCorTap {separator}", new System.String('-', 80));
             Debug.LogVerbose("PoeTexasCorTap:LightingSceneExt:HttpClientRequest: RequestType = {requestType}", request.RequestType);
             Debug.LogVerbose("PoeTexasCorTap:LightingSceneExt:HttpClientRequest: HeaderValue = {header}", request.Header);
             Debug.LogVerbose("PoeTexasCorTap:LightingSceneExt:HttpClientRequest: URL = {url}", request.Url.PathAndParams);
-            Debug.LogVerbose("PoeTexasCorTap {sep}", new System.String('-', 80));
+            Debug.LogVerbose("PoeTexasCorTap {separator}", new System.String('-', 80));
 #else
             Debug.Console(2, "PoeTexasCorTap {0}", new String('-', 80));
             Debug.Console(2, "PoeTexasCorTap:LightingSceneExt:HttpClientRequest: RequestType = {0}", request.RequestType);
