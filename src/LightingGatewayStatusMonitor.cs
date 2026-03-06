@@ -64,11 +64,19 @@ namespace PoeTexasCorTap
             }
             catch (HttpException ex)
             {
+#if SERIES4
+                Debug.LogError("[{key}] Caught an Http Exception dispatching a lighting poll: {message}{stackTrace}", Key, ex.Message, ex.StackTrace);
+#else
                 Debug.Console(1, this, "Caught an Http Exception dispatching a lighting poll: {0}{1}", ex.Message, ex.StackTrace);
+#endif
             }
             catch (Exception ex)
             {
+#if SERIES4
+                Debug.LogError("[{key}] Caught an Exception dispatching a lighting poll: {message}{stackTrace}", Key, ex.Message, ex.StackTrace);
+#else
                 Debug.Console(1, this, "Caught an Exception dispatching a lighting poll: {0}{1}", ex.Message, ex.StackTrace);
+#endif
             }
         }
 
