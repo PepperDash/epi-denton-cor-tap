@@ -48,7 +48,11 @@ namespace PoeTexasCorTap
                 }
                 catch (Exception ex)
                 {
+#if SERIES4
+                    Debug.LogError("Caught an exception in a queue:{message}", ex.Message);
+#else
                     Debug.Console(2, "Caught an exception in a queue:{0}", ex.Message);
+#endif
                 }
             }
 
